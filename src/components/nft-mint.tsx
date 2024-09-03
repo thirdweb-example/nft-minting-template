@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Toast } from "@/components/ui/toast";
@@ -30,30 +30,16 @@ export function NftMint(props: Props) {
 	const [isMinting, setIsMinting] = useState(false);
 	const [showToast, setShowToast] = useState(false);
 	const [quantity, setQuantity] = useState(1);
-	const [mounted, setMounted] = useState(false);
 	const [useCustomAddress, setUseCustomAddress] = useState(false);
 	const [customAddress, setCustomAddress] = useState("");
 	const { theme, setTheme } = useTheme();
-
-	useEffect(() => {
-		setMounted(true);
-	}, []);
-
-	const handleMint = async () => {
-		setIsMinting(true);
-		// Simulate minting process
-		await new Promise((resolve) => setTimeout(resolve, 2000));
-		setIsMinting(false);
-		setShowToast(true);
-		setTimeout(() => setShowToast(false), 3000);
-	};
 
 	const decreaseQuantity = () => {
 		setQuantity((prev) => Math.max(1, prev - 1));
 	};
 
 	const increaseQuantity = () => {
-		setQuantity((prev) => Math.min(10, prev + 1)); // Assuming a max of 10 NFTs can be minted at once
+		setQuantity((prev) => prev + 1); // Assuming a max of 10 NFTs can be minted at once
 	};
 
 	const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,11 +49,9 @@ export function NftMint(props: Props) {
 		}
 	};
 
-	const toggleTheme = () => {
-		setTheme(theme === "dark" ? "light" : "dark");
-	};
-
-	if (!mounted) return null;
+	// const toggleTheme = () => {
+	// 	setTheme(theme === "dark" ? "light" : "dark");
+	// };
 	if (!props.pricePerToken) {
 		console.error("Invalid pricePerToken");
 		return null;
@@ -133,7 +117,7 @@ export function NftMint(props: Props) {
 								type="number"
 								value={quantity}
 								onChange={handleQuantityChange}
-								className="w-16 text-center rounded-none border-x-0"
+								className="w-16 text-center rounded-none border-x-0 pl-6"
 								min="1"
 								max="10"
 							/>
@@ -175,6 +159,7 @@ export function NftMint(props: Props) {
 				</CardContent>
 				<CardFooter>
 					<ClaimButton
+						theme={"light"}
 						contractAddress={props.contract.address}
 						chain={props.contract.chain}
 						client={props.contract.client}
@@ -194,7 +179,7 @@ export function NftMint(props: Props) {
 					</ClaimButton>
 				</CardFooter>
 			</Card>
-			{showToast && (
+			{true && (
 				<Toast className="fixed bottom-4 right-4 bg-green-500 text-white p-4 rounded-md">
 					Successfully minted {quantity} NFT{quantity > 1 ? "s" : ""}
 					{useCustomAddress && customAddress ? ` to ${customAddress}` : ""}!
