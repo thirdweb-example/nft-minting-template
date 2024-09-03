@@ -142,7 +142,9 @@ export function NftMint(props: Props) {
 							Total: {props.pricePerToken * quantity} {props.currencySymbol}
 						</div>
 					</div>
-					<div className="flex items-center space-x-2 mb-4">
+
+					{/* Not ready yet - waiting for new release of the ClaimButton */}
+					{/* <div className="flex items-center space-x-2 mb-4">
 						<Switch
 							id="custom-address"
 							checked={useCustomAddress}
@@ -154,7 +156,7 @@ export function NftMint(props: Props) {
 						>
 							Mint to a custom address
 						</Label>
-					</div>
+					</div> */}
 					{useCustomAddress && (
 						<div className="mb-4">
 							<Input
