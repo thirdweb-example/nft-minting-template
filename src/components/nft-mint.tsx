@@ -10,9 +10,11 @@ import { Switch } from "@/components/ui/switch";
 import { Loader2, Minus, Plus, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import type { ThirdwebContract } from "thirdweb";
-import { ClaimButton, ConnectButton, NFT } from "thirdweb/react";
+import { ClaimButton, ConnectButton, MediaRenderer, NFT } from "thirdweb/react";
 import { client } from "@/lib/thirdwebClient";
 import React from "react";
+import { toast } from "sonner";
+import { Skeleton } from "./ui/skeleton";
 
 type Props = {
 	contract: ThirdwebContract;
@@ -28,7 +30,6 @@ type Props = {
 export function NftMint(props: Props) {
 	console.log(props);
 	const [isMinting, setIsMinting] = useState(false);
-	const [showToast, setShowToast] = useState(false);
 	const [quantity, setQuantity] = useState(1);
 	const [useCustomAddress, setUseCustomAddress] = useState(false);
 	const [customAddress, setCustomAddress] = useState("");
@@ -80,15 +81,20 @@ export function NftMint(props: Props) {
 					<div className="aspect-square overflow-hidden rounded-lg mb-4 relative">
 						{props.isERC1155 ? (
 							<NFT contract={props.contract} tokenId={props.tokenId}>
-								<React.Suspense>
+								<React.Suspense
+									fallback={<Skeleton className="w-full h-full object-cover" />}
+								>
 									<NFT.Media className="w-full h-full object-cover" />
 								</React.Suspense>
 							</NFT>
 						) : (
-							<img
-								src="/placeholder.svg?height=400&width=400"
-								alt="NFT Preview"
+							<MediaRenderer
+								client={client}
 								className="w-full h-full object-cover"
+								alt=""
+								src={
+									props.contractImage || "/placeholder.svg?height=400&width=400"
+								}
 							/>
 						)}
 						<div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded-full text-sm font-semibold">
@@ -117,7 +123,7 @@ export function NftMint(props: Props) {
 								type="number"
 								value={quantity}
 								onChange={handleQuantityChange}
-								className="w-16 text-center rounded-none border-x-0 pl-6"
+								className="w-24 text-center rounded-none border-x-0 pl-6"
 								min="1"
 								max="10"
 							/>
@@ -132,7 +138,7 @@ export function NftMint(props: Props) {
 								<Plus className="h-4 w-4" />
 							</Button>
 						</div>
-						<div className="text-lg font-semibold dark:text-white">
+						<div className="text-base pr-1 font-semibold dark:text-white">
 							Total: {props.pricePerToken * quantity} {props.currencySymbol}
 						</div>
 					</div>
@@ -142,7 +148,12 @@ export function NftMint(props: Props) {
 							checked={useCustomAddress}
 							onCheckedChange={setUseCustomAddress}
 						/>
-						<Label htmlFor="custom-address">Mint to a custom address</Label>
+						<Label
+							htmlFor="custom-address"
+							className={`${useCustomAddress ? "" : "text-gray-400"} cursor-pointer`}
+						>
+							Mint to a custom address
+						</Label>
 					</div>
 					{useCustomAddress && (
 						<div className="mb-4">
@@ -174,6 +185,9 @@ export function NftMint(props: Props) {
 						}
 						style={{ backgroundColor: "black", color: "white", width: "100%" }}
 						disabled={isMinting}
+						onTransactionSent={() => toast.info("Minting NFT")}
+						onTransactionConfirmed={() => toast.success("Minted successfully")}
+						onError={(err) => toast.error(err.message)}
 					>
 						Mint {quantity} NFT{quantity > 1 ? "s" : ""}
 					</ClaimButton>
