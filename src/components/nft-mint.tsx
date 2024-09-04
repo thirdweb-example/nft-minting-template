@@ -10,7 +10,13 @@ import { Switch } from "@/components/ui/switch";
 import { Loader2, Minus, Plus, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import type { ThirdwebContract } from "thirdweb";
-import { ClaimButton, ConnectButton, MediaRenderer, NFT } from "thirdweb/react";
+import {
+	ClaimButton,
+	ConnectButton,
+	MediaRenderer,
+	NFT,
+	useActiveAccount,
+} from "thirdweb/react";
 import { client } from "@/lib/thirdwebClient";
 import React from "react";
 import { toast } from "sonner";
@@ -34,6 +40,7 @@ export function NftMint(props: Props) {
 	const [useCustomAddress, setUseCustomAddress] = useState(false);
 	const [customAddress, setCustomAddress] = useState("");
 	const { theme, setTheme } = useTheme();
+	const account = useActiveAccount();
 
 	const decreaseQuantity = () => {
 		setQuantity((prev) => Math.max(1, prev - 1));
@@ -171,28 +178,41 @@ export function NftMint(props: Props) {
 					)}
 				</CardContent>
 				<CardFooter>
-					<ClaimButton
-						theme={"light"}
-						contractAddress={props.contract.address}
-						chain={props.contract.chain}
-						client={props.contract.client}
-						claimParams={
-							props.isERC1155
-								? {
-										type: "ERC1155",
-										tokenId: props.tokenId,
-										quantity: BigInt(quantity),
-									}
-								: { type: "ERC721", quantity: BigInt(quantity) }
-						}
-						style={{ backgroundColor: "black", color: "white", width: "100%" }}
-						disabled={isMinting}
-						onTransactionSent={() => toast.info("Minting NFT")}
-						onTransactionConfirmed={() => toast.success("Minted successfully")}
-						onError={(err) => toast.error(err.message)}
-					>
-						Mint {quantity} NFT{quantity > 1 ? "s" : ""}
-					</ClaimButton>
+					{account ? (
+						<ClaimButton
+							theme={"light"}
+							contractAddress={props.contract.address}
+							chain={props.contract.chain}
+							client={props.contract.client}
+							claimParams={
+								props.isERC1155
+									? {
+											type: "ERC1155",
+											tokenId: props.tokenId,
+											quantity: BigInt(quantity),
+										}
+									: { type: "ERC721", quantity: BigInt(quantity) }
+							}
+							style={{
+								backgroundColor: "black",
+								color: "white",
+								width: "100%",
+							}}
+							disabled={isMinting}
+							onTransactionSent={() => toast.info("Minting NFT")}
+							onTransactionConfirmed={() =>
+								toast.success("Minted successfully")
+							}
+							onError={(err) => toast.error(err.message)}
+						>
+							Mint {quantity} NFT{quantity > 1 ? "s" : ""}
+						</ClaimButton>
+					) : (
+						<ConnectButton
+							client={client}
+							connectButton={{ style: { width: "100%" } }}
+						/>
+					)}
 				</CardFooter>
 			</Card>
 			{true && (
