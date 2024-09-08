@@ -150,8 +150,7 @@ export function NftMint(props: Props) {
 						</div>
 					</div>
 
-					{/* Not ready yet - waiting for new release of the ClaimButton */}
-					{/* <div className="flex items-center space-x-2 mb-4">
+					<div className="flex items-center space-x-2 mb-4">
 						<Switch
 							id="custom-address"
 							checked={useCustomAddress}
@@ -163,7 +162,7 @@ export function NftMint(props: Props) {
 						>
 							Mint to a custom address
 						</Label>
-					</div> */}
+					</div>
 					{useCustomAddress && (
 						<div className="mb-4">
 							<Input
@@ -190,8 +189,13 @@ export function NftMint(props: Props) {
 											type: "ERC1155",
 											tokenId: props.tokenId,
 											quantity: BigInt(quantity),
+											to: customAddress,
 										}
-									: { type: "ERC721", quantity: BigInt(quantity) }
+									: {
+											type: "ERC721",
+											quantity: BigInt(quantity),
+											to: customAddress,
+										}
 							}
 							style={{
 								backgroundColor: "black",
