@@ -19,6 +19,7 @@ import {
 	getActiveClaimCondition as getActiveClaimCondition721,
 	isERC721,
 } from "thirdweb/extensions/erc721";
+import { getActiveClaimCondition as getActiveClaimCondition20 } from "thirdweb/extensions/erc20";
 import { useReadContract } from "thirdweb/react";
 
 // This page renders on the client.
@@ -36,11 +37,13 @@ export default function Home() {
 	const contractMetadataQuery = useReadContract(getContractMetadata, {
 		contract,
 	});
+
 	const nftQuery = useReadContract(getNFT, {
 		contract,
 		tokenId,
 		queryOptions: { enabled: isERC1155Query.data },
 	});
+
 	const claimCondition1155 = useReadContract(getActiveClaimCondition1155, {
 		contract,
 		tokenId,
@@ -48,35 +51,55 @@ export default function Home() {
 			enabled: isERC1155Query.data,
 		},
 	});
+
 	const claimCondition721 = useReadContract(getActiveClaimCondition721, {
 		contract,
 		queryOptions: { enabled: isERC721Query.data },
 	});
+
+	const claimCondition20 = useReadContract(getActiveClaimCondition20, {
+		contract,
+		queryOptions: { enabled: !isERC721Query.data && !isERC1155Query.data },
+	});
+
 	const displayName = isERC1155Query.data
 		? nftQuery.data?.metadata.name
 		: contractMetadataQuery.data?.name;
+
 	const description = isERC1155Query.data
 		? nftQuery.data?.metadata.description
 		: contractMetadataQuery.data?.description;
-	const priceInWei =
-		claimCondition1155.data?.pricePerToken ||
-		claimCondition721.data?.pricePerToken;
-	const currency =
-		claimCondition1155.data?.currency || claimCondition721.data?.currency;
+
+	const priceInWei = isERC1155Query.data
+		? claimCondition1155.data?.pricePerToken
+		: isERC721Query.data
+			? claimCondition721.data?.pricePerToken
+			: claimCondition20.data?.pricePerToken;
+
+	const currency = isERC1155Query.data
+		? claimCondition1155.data?.currency
+		: isERC721Query.data
+			? claimCondition721.data?.currency
+			: claimCondition20.data?.currency;
+
 	const currencyContract = getContract({
 		address: currency || "",
 		chain,
 		client,
 	});
+
 	const currencyMetadata = useReadContract(getCurrencyMetadata, {
 		contract: currencyContract,
 		queryOptions: { enabled: !!currency },
 	});
+
 	const currencySymbol = currencyMetadata.data?.symbol || "";
+
 	const pricePerToken =
 		currencyMetadata.data && priceInWei
 			? Number(toTokens(priceInWei, currencyMetadata.data.decimals))
 			: null;
+
 	return (
 		<NftMint
 			contract={contract}
@@ -86,6 +109,7 @@ export default function Home() {
 			currencySymbol={currencySymbol}
 			pricePerToken={pricePerToken}
 			isERC1155={!!isERC1155Query.data}
+			isERC721={!!isERC721Query.data}
 			tokenId={tokenId}
 		/>
 	);

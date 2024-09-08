@@ -30,6 +30,7 @@ type Props = {
 	pricePerToken: number | null;
 	currencySymbol: string | null;
 	isERC1155: boolean;
+	isERC721: boolean;
 	tokenId: bigint;
 };
 
@@ -51,9 +52,9 @@ export function NftMint(props: Props) {
 	};
 
 	const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const value = Number.parseInt(e.target.value, 10);
+		const value = Number.parseInt(e.target.value);
 		if (!Number.isNaN(value)) {
-			setQuantity(Math.min(Math.max(1, value), 10));
+			setQuantity(Math.min(Math.max(1, value)));
 		}
 	};
 
@@ -130,15 +131,13 @@ export function NftMint(props: Props) {
 								type="number"
 								value={quantity}
 								onChange={handleQuantityChange}
-								className="w-24 text-center rounded-none border-x-0 pl-6"
+								className="w-28 text-center rounded-none border-x-0 pl-6"
 								min="1"
-								max="10"
 							/>
 							<Button
 								variant="outline"
 								size="icon"
 								onClick={increaseQuantity}
-								disabled={quantity >= 10}
 								aria-label="Increase quantity"
 								className="rounded-l-none"
 							>
@@ -191,11 +190,17 @@ export function NftMint(props: Props) {
 											quantity: BigInt(quantity),
 											to: customAddress,
 										}
-									: {
-											type: "ERC721",
-											quantity: BigInt(quantity),
-											to: customAddress,
-										}
+									: props.isERC721
+										? {
+												type: "ERC721",
+												quantity: BigInt(quantity),
+												to: customAddress,
+											}
+										: {
+												type: "ERC20",
+												quantity: String(quantity),
+												to: customAddress,
+											}
 							}
 							style={{
 								backgroundColor: "black",
