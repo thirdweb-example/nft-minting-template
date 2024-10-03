@@ -7,7 +7,7 @@ import { Toast } from "@/components/ui/toast";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, Minus, Plus, Moon, Sun } from "lucide-react";
+import { Minus, Plus } from "lucide-react";
 import { useTheme } from "next-themes";
 import type { ThirdwebContract } from "thirdweb";
 import {
@@ -70,20 +70,6 @@ export function NftMint(props: Props) {
 			<div className="absolute top-4 right-4">
 				<ConnectButton client={client} />
 			</div>
-
-			{/* <Button
-				variant="outline"
-				size="icon"
-				className="absolute top-4 right-4"
-				onClick={toggleTheme}
-				aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-			>
-				{theme === "dark" ? (
-					<Sun className="h-[1.2rem] w-[1.2rem]" />
-				) : (
-					<Moon className="h-[1.2rem] w-[1.2rem]" />
-				)}
-			</Button> */}
 			<Card className="w-full max-w-md">
 				<CardContent className="pt-6">
 					<div className="aspect-square overflow-hidden rounded-lg mb-4 relative">
@@ -189,17 +175,20 @@ export function NftMint(props: Props) {
 											tokenId: props.tokenId,
 											quantity: BigInt(quantity),
 											to: customAddress,
+											from: account.address,
 										}
 									: props.isERC721
 										? {
 												type: "ERC721",
 												quantity: BigInt(quantity),
 												to: customAddress,
+												from: account.address,
 											}
 										: {
 												type: "ERC20",
 												quantity: String(quantity),
 												to: customAddress,
+												from: account.address,
 											}
 							}
 							style={{
