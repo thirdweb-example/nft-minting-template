@@ -12,7 +12,6 @@ export const defaultChainId = 11155111;
 /**
  * Only applicable to ERC1155 Edition Drop contract
  */
-export const defaultTokenId = 1n;
 export const defaultTokenId = 0n;
 
 
