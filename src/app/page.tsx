@@ -96,7 +96,7 @@ export default function Home() {
 	const currencySymbol = currencyMetadata.data?.symbol || "";
 
 	const pricePerToken =
-		currencyMetadata.data && priceInWei
+		currencyMetadata.data && priceInWei !== null && priceInWei !== undefined
 			? Number(toTokens(priceInWei, currencyMetadata.data.decimals))
 			: null;
 

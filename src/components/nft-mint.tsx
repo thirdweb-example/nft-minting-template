@@ -35,7 +35,7 @@ type Props = {
 };
 
 export function NftMint(props: Props) {
-	console.log(props);
+	// console.log(props);
 	const [isMinting, setIsMinting] = useState(false);
 	const [quantity, setQuantity] = useState(1);
 	const [useCustomAddress, setUseCustomAddress] = useState(false);
@@ -61,7 +61,7 @@ export function NftMint(props: Props) {
 	// const toggleTheme = () => {
 	// 	setTheme(theme === "dark" ? "light" : "dark");
 	// };
-	if (!props.pricePerToken) {
+	if (props.pricePerToken === null || props.pricePerToken === undefined) {
 		console.error("Invalid pricePerToken");
 		return null;
 	}
