@@ -1,18 +1,18 @@
 /**
  * Change this to the contract address of your NFT collection
  */
-export const defaultNftContractAddress = process.env.NFT_CONTRACT_ADDRESS;
+export const defaultNftContractAddress = process.env.NEXT_PUBLIC_NFT_CONTRACT_ADDRESS;
 
 /**
  * Change this to the chainId that your nft collection is deployed on
  * Look for your chain: https://thirdweb.com/chainlist
  */
-export const defaultChainId = process.env.NFT_CONTRACT_CHAIN_ID;
+export const defaultChainId = process.env.NEXT_PUBLIC_NFT_CONTRACT_CHAIN_ID;
 
 /**
  * Only applicable to ERC1155 Edition Drop contract
  */
-export const defaultTokenId = process.env.NFT_CONTRACT_TOKEN_ID;
+export const defaultTokenId = process.env.NEXT_PUBLIC_NFT_CONTRACT_TOKEN_ID;
 
 
 /**
