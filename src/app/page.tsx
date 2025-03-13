@@ -1,5 +1,3 @@
-"use client";
-
 import { NftMint } from "@/components/nft-mint";
 import {
 	defaultChainId,
@@ -20,11 +18,9 @@ import {
 	isERC721,
 } from "thirdweb/extensions/erc721";
 import { getActiveClaimCondition as getActiveClaimCondition20 } from "thirdweb/extensions/erc20";
-import { useReadContract } from "thirdweb/react";
 
-// This page renders on the client.
-// If you are looking for a server-rendered version, checkout src/ssr/page.tsx
-export default function Home() {
+
+export default async function Home() {
 	const tokenId = defaultTokenId;
 	const chain = defineChain(defaultChainId);
 	const contract = getContract({
@@ -32,72 +28,60 @@ export default function Home() {
 		chain,
 		client,
 	});
-	const isERC721Query = useReadContract(isERC721, { contract });
-	const isERC1155Query = useReadContract(isERC1155, { contract });
-	const contractMetadataQuery = useReadContract(getContractMetadata, {
-		contract,
-	});
+	const [isERC721Query, isERC1155Query, contractMetadataQuery] =
+		await Promise.all([
+			isERC721({ contract }),
+			isERC1155({ contract }),
+			getContractMetadata({ contract }),
+		]);
 
-	const nftQuery = useReadContract(getNFT, {
-		contract,
-		tokenId,
-		queryOptions: { enabled: isERC1155Query.data },
-	});
+	const [nftQuery, claimCondition1155, claimCondition721, claimCondition20] =
+		await Promise.all([
+			isERC1155Query ? getNFT({ contract, tokenId }) : undefined,
+			isERC1155Query
+				? getActiveClaimCondition1155({ contract, tokenId })
+				: undefined,
+			isERC721Query ? getActiveClaimCondition721({ contract }) : undefined,
+			!isERC1155Query && !isERC721Query
+				? getActiveClaimCondition20({ contract })
+				: undefined,
+		]);
 
-	const claimCondition1155 = useReadContract(getActiveClaimCondition1155, {
-		contract,
-		tokenId,
-		queryOptions: {
-			enabled: isERC1155Query.data,
-		},
-	});
-
-	const claimCondition721 = useReadContract(getActiveClaimCondition721, {
-		contract,
-		queryOptions: { enabled: isERC721Query.data },
-	});
-
-	const claimCondition20 = useReadContract(getActiveClaimCondition20, {
-		contract,
-		queryOptions: { enabled: !isERC721Query.data && !isERC1155Query.data },
-	});
-
-	const displayName = isERC1155Query.data
-		? nftQuery.data?.metadata.name
+	const displayName = isERC1155Query
+		? nftQuery?.metadata.name
 		: contractMetadataQuery.data?.name;
 
-	const description = isERC1155Query.data
-		? nftQuery.data?.metadata.description
+	const description = isERC1155Query
+		? nftQuery?.metadata.description
 		: contractMetadataQuery.data?.description;
 
-	const priceInWei = isERC1155Query.data
-		? claimCondition1155.data?.pricePerToken
-		: isERC721Query.data
-			? claimCondition721.data?.pricePerToken
-			: claimCondition20.data?.pricePerToken;
+	const priceInWei = isERC1155Query
+		? claimCondition1155?.pricePerToken
+		: isERC721Query
+			? claimCondition721?.pricePerToken
+			: claimCondition20?.pricePerToken;
 
-	const currency = isERC1155Query.data
-		? claimCondition1155.data?.currency
-		: isERC721Query.data
-			? claimCondition721.data?.currency
-			: claimCondition20.data?.currency;
+	const currency = isERC1155Query
+		? claimCondition1155?.currency
+		: isERC721Query
+			? claimCondition721?.currency
+			: claimCondition20?.currency;
 
-	const currencyContract = getContract({
-		address: currency || "",
-		chain,
-		client,
-	});
+	const currencyMetadata = currency
+		? await getCurrencyMetadata({
+				contract: getContract({
+					address: currency || "",
+					chain,
+					client,
+				}),
+			})
+		: undefined;
 
-	const currencyMetadata = useReadContract(getCurrencyMetadata, {
-		contract: currencyContract,
-		queryOptions: { enabled: !!currency },
-	});
-
-	const currencySymbol = currencyMetadata.data?.symbol || "";
+	const currencySymbol = currencyMetadata?.symbol || "";
 
 	const pricePerToken =
-		currencyMetadata.data && priceInWei !== null && priceInWei !== undefined
-			? Number(toTokens(priceInWei, currencyMetadata.data.decimals))
+		currencyMetadata && priceInWei
+			? Number(toTokens(priceInWei, currencyMetadata.decimals))
 			: null;
 
 	return (
@@ -108,8 +92,8 @@ export default function Home() {
 			description={description || ""}
 			currencySymbol={currencySymbol}
 			pricePerToken={pricePerToken}
-			isERC1155={!!isERC1155Query.data}
-			isERC721={!!isERC721Query.data}
+			isERC1155={!!isERC1155Query}
+			isERC721={!!isERC721Query}
 			tokenId={tokenId}
 		/>
 	);
