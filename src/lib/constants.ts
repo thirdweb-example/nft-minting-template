@@ -1,17 +1,24 @@
 /**
  * Change this to the contract address of your NFT collection
  */
-export const defaultNftContractAddress = process.env.NEXT_PUBLIC_NFT_CONTRACT_ADDRESS || '';
+if (!process.env.NEXT_PUBLIC_NFT_CONTRACT_ADDRESS) {
+    throw new Error("NEXT_PUBLIC_NFT_CONTRACT_ADDRESS is not defined in the environment variables");
+}
+export const defaultNftContractAddress = process.env.NEXT_PUBLIC_NFT_CONTRACT_ADDRESS;
 
 /**
  * Change this to the chainId that your nft collection is deployed on
  * Look for your chain: https://thirdweb.com/chainlist
  */
-export const defaultChainId = Number(process.env.NEXT_PUBLIC_NFT_CONTRACT_CHAIN_ID || 11155111);
+if (!process.env.NEXT_PUBLIC_NFT_CONTRACT_CHAIN_ID) {
+    throw new Error("NEXT_PUBLIC_NFT_CONTRACT_CHAIN_ID is not defined in the environment variables");
+}
+export const defaultChainId = Number(process.env.NEXT_PUBLIC_NFT_CONTRACT_CHAIN_ID);
 
 /**
  * Only applicable to ERC1155 Edition Drop contract
  */
+
 export const defaultTokenId = BigInt(process.env.NEXT_PUBLIC_NFT_CONTRACT_TOKEN_ID || "0");
 
 

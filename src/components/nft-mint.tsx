@@ -14,7 +14,8 @@ import {
 	ClaimButton,
 	ConnectButton,
 	MediaRenderer,
-	NFT,
+	NFTProvider,
+	NFTMedia,
 	useActiveAccount,
 } from "thirdweb/react";
 import { client } from "@/lib/thirdwebClient";
@@ -74,13 +75,14 @@ export function NftMint(props: Props) {
 				<CardContent className="pt-6">
 					<div className="aspect-square overflow-hidden rounded-lg mb-4 relative">
 						{props.isERC1155 ? (
-							<NFT contract={props.contract} tokenId={props.tokenId}>
-								<React.Suspense
-									fallback={<Skeleton className="w-full h-full object-cover" />}
-								>
-									<NFT.Media className="w-full h-full object-cover" />
-								</React.Suspense>
-							</NFT>
+							<NFTProvider contract={props.contract} tokenId={props.tokenId}>
+								<NFTMedia
+
+									loadingComponent={<Skeleton className="w-full h-full object-cover" />}
+
+									className="w-full h-full object-cover" />
+							</NFTProvider>
+
 						) : (
 							<MediaRenderer
 								client={client}
@@ -171,25 +173,25 @@ export function NftMint(props: Props) {
 							claimParams={
 								props.isERC1155
 									? {
-											type: "ERC1155",
-											tokenId: props.tokenId,
+										type: "ERC1155",
+										tokenId: props.tokenId,
+										quantity: BigInt(quantity),
+										to: customAddress,
+										from: account.address,
+									}
+									: props.isERC721
+										? {
+											type: "ERC721",
 											quantity: BigInt(quantity),
 											to: customAddress,
 											from: account.address,
 										}
-									: props.isERC721
-										? {
-												type: "ERC721",
-												quantity: BigInt(quantity),
-												to: customAddress,
-												from: account.address,
-											}
 										: {
-												type: "ERC20",
-												quantity: String(quantity),
-												to: customAddress,
-												from: account.address,
-											}
+											type: "ERC20",
+											quantity: String(quantity),
+											to: customAddress,
+											from: account.address,
+										}
 							}
 							style={{
 								backgroundColor: "black",

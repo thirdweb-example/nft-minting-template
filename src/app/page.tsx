@@ -1,100 +1,121 @@
 import { NftMint } from "@/components/nft-mint";
 import {
-	defaultChainId,
-	defaultNftContractAddress,
-	defaultTokenId,
+    defaultChainId,
+    defaultNftContractAddress,
+    defaultTokenId,
 } from "@/lib/constants";
 import { client } from "@/lib/thirdwebClient";
 import { defineChain, getContract, toTokens } from "thirdweb";
 import { getContractMetadata } from "thirdweb/extensions/common";
 import {
-	getActiveClaimCondition as getActiveClaimCondition1155,
-	getNFT,
-	isERC1155,
+    getActiveClaimCondition as getActiveClaimCondition1155,
+    getNFT,
+    isERC1155,
 } from "thirdweb/extensions/erc1155";
 import { getCurrencyMetadata } from "thirdweb/extensions/erc20";
 import {
-	getActiveClaimCondition as getActiveClaimCondition721,
-	isERC721,
+    getActiveClaimCondition as getActiveClaimCondition721,
+    isERC721,
 } from "thirdweb/extensions/erc721";
 import { getActiveClaimCondition as getActiveClaimCondition20 } from "thirdweb/extensions/erc20";
 
 
+const chain = defineChain(defaultChainId);
+const contract = getContract({ address: defaultNftContractAddress, chain, client });
+const tokenId = defaultTokenId;
+
+async function getERCType() {
+    if (await isERC1155({ contract })) return "ERC1155";
+    if (await isERC721({ contract })) return "ERC721";
+    return "ERC20";
+}
+
+async function getERC20Info() {
+    const claimCondition = await getActiveClaimCondition20({ contract });
+    return { claimCondition };
+}
+
+async function getERC721Info() {
+    const [claimCondition, metadata] = await Promise.all([
+        getActiveClaimCondition721({ contract }),
+        getContractMetadata({ contract }),
+    ]);
+    const priceInWei = claimCondition?.pricePerToken;
+    const currency = claimCondition?.currency;
+    const currencyMetadata = currency
+        ? await getCurrencyMetadata({ contract: getContract({ address: currency, chain, client }) })
+        : undefined;
+    return {
+        displayName: metadata?.data?.name,
+        description: metadata?.data?.description,
+        pricePerToken: currencyMetadata && priceInWei ? Number(toTokens(priceInWei, currencyMetadata.decimals)) : null,
+        currencyMetadata,
+        metadata,
+        claimCondition,
+    };
+}
+
+async function getERC1155Info() {
+    const [nft, claimCondition] = await Promise.all([
+        getNFT({ contract, tokenId }),
+        getActiveClaimCondition1155({ contract, tokenId }),
+    ]);
+    const priceInWei = claimCondition?.pricePerToken;
+    const currency = claimCondition?.currency;
+    const currencyMetadata = currency
+        ? await getCurrencyMetadata({ contract: getContract({ address: currency, chain, client }) })
+        : undefined;
+    return {
+        displayName: nft?.metadata.name,
+        description: nft?.metadata.description,
+        pricePerToken: currencyMetadata && priceInWei ? Number(toTokens(priceInWei, currencyMetadata.decimals)) : null,
+        currencyMetadata,
+        nft,
+        claimCondition,
+    };
+}
+
+type ERCInfo = {
+    displayName?: string;
+    description?: string;
+    pricePerToken?: number | null;
+    currencyMetadata?: any;
+    metadata?: any;
+    claimCondition?: any;
+    nft?: any;
+};
+
 export default async function Home() {
-	const tokenId = defaultTokenId;
-	const chain = defineChain(defaultChainId);
-	const contract = getContract({
-		address: defaultNftContractAddress,
-		chain,
-		client,
-	});
-	const [isERC721Query, isERC1155Query, contractMetadataQuery] =
-		await Promise.all([
-			isERC721({ contract }),
-			isERC1155({ contract }),
-			getContractMetadata({ contract }),
-		]);
+    const ercType = await getERCType();
+    let info: ERCInfo = {};
 
-	const [nftQuery, claimCondition1155, claimCondition721, claimCondition20] =
-		await Promise.all([
-			isERC1155Query ? getNFT({ contract, tokenId }) : undefined,
-			isERC1155Query
-				? getActiveClaimCondition1155({ contract, tokenId })
-				: undefined,
-			isERC721Query ? getActiveClaimCondition721({ contract }) : undefined,
-			!isERC1155Query && !isERC721Query
-				? getActiveClaimCondition20({ contract })
-				: undefined,
-		]);
+    switch (ercType) {
+        case "ERC20":
+            info = await getERC20Info();
+            console.log("ERC20", info);
+            break;
+        case "ERC721":
+            info = await getERC721Info();
+            console.log("ERC721", info
+            );
+            break;
+        case "ERC1155":
+            info = await getERC1155Info();
+            console.log("ERC1155", info);
+            break;
+    }
 
-	const displayName = isERC1155Query
-		? nftQuery?.metadata.name
-		: contractMetadataQuery.data?.name;
-
-	const description = isERC1155Query
-		? nftQuery?.metadata.description
-		: contractMetadataQuery.data?.description;
-
-	const priceInWei = isERC1155Query
-		? claimCondition1155?.pricePerToken
-		: isERC721Query
-			? claimCondition721?.pricePerToken
-			: claimCondition20?.pricePerToken;
-
-	const currency = isERC1155Query
-		? claimCondition1155?.currency
-		: isERC721Query
-			? claimCondition721?.currency
-			: claimCondition20?.currency;
-
-	const currencyMetadata = currency
-		? await getCurrencyMetadata({
-				contract: getContract({
-					address: currency || "",
-					chain,
-					client,
-				}),
-			})
-		: undefined;
-
-	const currencySymbol = currencyMetadata?.symbol || "";
-
-	const pricePerToken =
-		currencyMetadata && priceInWei
-			? Number(toTokens(priceInWei, currencyMetadata.decimals))
-			: null;
-
-	return (
-		<NftMint
-			contract={contract}
-			displayName={displayName || ""}
-			contractImage={contractMetadataQuery.data?.image || ""}
-			description={description || ""}
-			currencySymbol={currencySymbol}
-			pricePerToken={pricePerToken}
-			isERC1155={!!isERC1155Query}
-			isERC721={!!isERC721Query}
-			tokenId={tokenId}
-		/>
-	);
+    return (
+        <NftMint
+            contract={contract}
+            displayName={info.displayName || ""}
+            contractImage={info.metadata?.data?.image || ""}
+            description={info.description || ""}
+            currencySymbol={info.currencyMetadata?.symbol || ""}
+            pricePerToken={info.pricePerToken || 0}
+            isERC1155={ercType === "ERC1155"}
+            isERC721={ercType === "ERC721"}
+            tokenId={defaultTokenId}
+        />
+    );
 }
