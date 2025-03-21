@@ -1,18 +1,12 @@
 import { NftMint } from "@/components/nft-mint";
-import { defaultChainId, defaultNftContractAddress, defaultTokenId } from "@/lib/constants";
-// thirdweb client import
-import { client } from "@/lib/thirdwebClient";
+import { defaultTokenId, contract } from "@/lib/constants";
 // lib imports for fetching NFT details
 import { getERC20Info } from "@/lib/erc20";
 import { getERC721Info } from "@/lib/erc721";
 import { getERC1155Info } from "@/lib/erc1155";
 // thirdweb imports
-import { defineChain, getContract } from "thirdweb";
 import { isERC1155 } from "thirdweb/extensions/erc1155";
 import { isERC721 } from "thirdweb/extensions/erc721";
-
-const chain = defineChain(defaultChainId);
-const contract = getContract({ address: defaultNftContractAddress, chain, client });
 
 async function getERCType() {
   try {
@@ -33,7 +27,7 @@ export default async function Home() {
     const ercType = await getERCType();
     if (!ercType) throw new Error("Failed to determine ERC type.");
 
-    // Ensure errors are caught properly by using await inside try/catch
+    // fetch contract information depending on the ERC type
     let info;
     switch (ercType) {
       case "ERC20":
@@ -48,7 +42,7 @@ export default async function Home() {
       default:
         throw new Error("Unknown ERC type.");
     }
-    
+    console.log(ercType, info);
 
     if (!info) throw new Error("Failed to fetch NFT details.");
 
@@ -70,9 +64,12 @@ export default async function Home() {
     return (
       <div>
         <h1>Failed to load NFT</h1>
-        <p>{error instanceof Error ? error.message : "An unexpected error occurred."}</p>
+        <p>
+          {error instanceof Error
+            ? error.message
+            : "An unexpected error occurred."}
+        </p>
       </div>
     );
   }
 }
-
