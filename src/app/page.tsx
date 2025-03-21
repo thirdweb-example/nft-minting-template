@@ -9,17 +9,12 @@ import { isERC1155 } from "thirdweb/extensions/erc1155";
 import { isERC721 } from "thirdweb/extensions/erc721";
 
 async function getERCType() {
-  try {
-    const [isErc721, isErc1155] = await Promise.all([
-      isERC721({ contract }).catch(() => false),
-      isERC1155({ contract }).catch(() => false),
-    ]);
+  const [isErc721, isErc1155] = await Promise.all([
+    isERC721({ contract }).catch(() => false),
+    isERC1155({ contract }).catch(() => false),
+  ]);
 
-    return isErc1155 ? "ERC1155" : isErc721 ? "ERC721" : "ERC20";
-  } catch (error) {
-    console.error("Error detecting ERC type:", error);
-    return null;
-  }
+  return isErc1155 ? "ERC1155" : isErc721 ? "ERC721" : "ERC20";
 }
 
 export default async function Home() {
@@ -42,7 +37,6 @@ export default async function Home() {
       default:
         throw new Error("Unknown ERC type.");
     }
-    
 
     if (!info) throw new Error("Failed to fetch NFT details.");
 
