@@ -15,7 +15,7 @@ export async function getERC20Info(contract: ThirdwebContract) {
                 
             })
             : null;
-        console.log("contractMetadata", contractMetadata);
+        
         return {
             displayName: contractMetadata?.name || "",
             description: contractMetadata?.description || "",
