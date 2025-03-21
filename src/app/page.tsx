@@ -42,7 +42,7 @@ export default async function Home() {
       default:
         throw new Error("Unknown ERC type.");
     }
-    console.log(ercType, info);
+    
 
     if (!info) throw new Error("Failed to fetch NFT details.");
 
