@@ -1,116 +1,69 @@
-"use client";
-
 import { NftMint } from "@/components/nft-mint";
-import {
-	defaultChainId,
-	defaultNftContractAddress,
-	defaultTokenId,
-} from "@/lib/constants";
-import { client } from "@/lib/thirdwebClient";
-import { defineChain, getContract, toTokens } from "thirdweb";
-import { getContractMetadata } from "thirdweb/extensions/common";
-import {
-	getActiveClaimCondition as getActiveClaimCondition1155,
-	getNFT,
-	isERC1155,
-} from "thirdweb/extensions/erc1155";
-import { getCurrencyMetadata } from "thirdweb/extensions/erc20";
-import {
-	getActiveClaimCondition as getActiveClaimCondition721,
-	isERC721,
-} from "thirdweb/extensions/erc721";
-import { getActiveClaimCondition as getActiveClaimCondition20 } from "thirdweb/extensions/erc20";
-import { useReadContract } from "thirdweb/react";
+import { defaultTokenId, contract } from "@/lib/constants";
+// lib imports for fetching NFT details
+import { getERC20Info } from "@/lib/erc20";
+import { getERC721Info } from "@/lib/erc721";
+import { getERC1155Info } from "@/lib/erc1155";
+// thirdweb imports
+import { isERC1155 } from "thirdweb/extensions/erc1155";
+import { isERC721 } from "thirdweb/extensions/erc721";
 
-// This page renders on the client.
-// If you are looking for a server-rendered version, checkout src/ssr/page.tsx
-export default function Home() {
-	const tokenId = defaultTokenId;
-	const chain = defineChain(defaultChainId);
-	const contract = getContract({
-		address: defaultNftContractAddress,
-		chain,
-		client,
-	});
-	const isERC721Query = useReadContract(isERC721, { contract });
-	const isERC1155Query = useReadContract(isERC1155, { contract });
-	const contractMetadataQuery = useReadContract(getContractMetadata, {
-		contract,
-	});
+async function getERCType() {
+  const [isErc721, isErc1155] = await Promise.all([
+    isERC721({ contract }).catch(() => false),
+    isERC1155({ contract }).catch(() => false),
+  ]);
 
-	const nftQuery = useReadContract(getNFT, {
-		contract,
-		tokenId,
-		queryOptions: { enabled: isERC1155Query.data },
-	});
+  return isErc1155 ? "ERC1155" : isErc721 ? "ERC721" : "ERC20";
+}
 
-	const claimCondition1155 = useReadContract(getActiveClaimCondition1155, {
-		contract,
-		tokenId,
-		queryOptions: {
-			enabled: isERC1155Query.data,
-		},
-	});
+export default async function Home() {
+  try {
+    const ercType = await getERCType();
+    if (!ercType) throw new Error("Failed to determine ERC type.");
 
-	const claimCondition721 = useReadContract(getActiveClaimCondition721, {
-		contract,
-		queryOptions: { enabled: isERC721Query.data },
-	});
+    // fetch contract information depending on the ERC type
+    let info;
+    switch (ercType) {
+      case "ERC20":
+        info = await getERC20Info(contract);
+        break;
+      case "ERC721":
+        info = await getERC721Info(contract);
+        break;
+      case "ERC1155":
+        info = await getERC1155Info(contract);
+        break;
+      default:
+        throw new Error("Unknown ERC type.");
+    }
 
-	const claimCondition20 = useReadContract(getActiveClaimCondition20, {
-		contract,
-		queryOptions: { enabled: !isERC721Query.data && !isERC1155Query.data },
-	});
+    if (!info) throw new Error("Failed to fetch NFT details.");
 
-	const displayName = isERC1155Query.data
-		? nftQuery.data?.metadata.name
-		: contractMetadataQuery.data?.name;
-
-	const description = isERC1155Query.data
-		? nftQuery.data?.metadata.description
-		: contractMetadataQuery.data?.description;
-
-	const priceInWei = isERC1155Query.data
-		? claimCondition1155.data?.pricePerToken
-		: isERC721Query.data
-			? claimCondition721.data?.pricePerToken
-			: claimCondition20.data?.pricePerToken;
-
-	const currency = isERC1155Query.data
-		? claimCondition1155.data?.currency
-		: isERC721Query.data
-			? claimCondition721.data?.currency
-			: claimCondition20.data?.currency;
-
-	const currencyContract = getContract({
-		address: currency || "",
-		chain,
-		client,
-	});
-
-	const currencyMetadata = useReadContract(getCurrencyMetadata, {
-		contract: currencyContract,
-		queryOptions: { enabled: !!currency },
-	});
-
-	const currencySymbol = currencyMetadata.data?.symbol || "";
-
-	const pricePerToken =
-		currencyMetadata.data && priceInWei !== null && priceInWei !== undefined
-			? Number(toTokens(priceInWei, currencyMetadata.data.decimals))
-			: null;
-
-	return (
-		<NftMint
-			contract={contract}
-			displayName={displayName || ""}
-			contractImage={contractMetadataQuery.data?.image || ""}
-			description={description || ""}
-			currencySymbol={currencySymbol}
-			pricePerToken={pricePerToken}
-			isERC1155={!!isERC1155Query.data}
-			isERC721={!!isERC721Query.data}
-			tokenId={tokenId}
-		/>
-	);
+    return (
+      <NftMint
+        contract={contract}
+        displayName={info.displayName || ""}
+        contractImage={info.contractImage || ""}
+        description={info.description || ""}
+        currencySymbol={info.currencySymbol || ""}
+        pricePerToken={info.pricePerToken || 0}
+        isERC1155={ercType === "ERC1155"}
+        isERC721={ercType === "ERC721"}
+        tokenId={defaultTokenId}
+      />
+    );
+  } catch (error) {
+    console.error("Error in Home component:", error);
+    return (
+      <div>
+        <h1>Failed to load NFT</h1>
+        <p>
+          {error instanceof Error
+            ? error.message
+            : "An unexpected error occurred."}
+        </p>
+      </div>
+    );
+  }
 }

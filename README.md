@@ -1,3 +1,7 @@
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/thirdweb-example/nft-minting-template&env=NEXT_PUBLIC_THIRDWEB_CLIENT_ID,THIRDWEB_SECRET_KEY,NEXT_PUBLIC_NFT_CONTRACT_ADDRESS,NEXT_PUBLIC_NFT_CONTRACT_CHAIN_ID,NEXT_PUBLIC_NFT_CONTRACT_TOKEN_ID&envDescription=Get%20NEXT_PUBLIC_THIRDWEB_CLIENT_ID%20%26%20THIRDWEB_SECRET_KEY%20from%20https%3A%2F%2Fthirdweb.com%2Fteam%2F~%2F~%2F&project-name=my-nft-minting-website&repository-name=my-nft-minting-website&demo-title=NFT%20Minting%20Template&demo-url=https%3A%2F%2Fmint.thirdweb-preview.com%2F)
+
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
