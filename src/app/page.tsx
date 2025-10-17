@@ -1,69 +1,60 @@
+"use client";
+
 import { NftMint } from "@/components/nft-mint";
 import { defaultTokenId, contract } from "@/lib/constants";
-// lib imports for fetching NFT details
-import { getERC20Info } from "@/lib/erc20";
-import { getERC721Info } from "@/lib/erc721";
-import { getERC1155Info } from "@/lib/erc1155";
-// thirdweb imports
-import { isERC1155 } from "thirdweb/extensions/erc1155";
-import { isERC721 } from "thirdweb/extensions/erc721";
+import { useNftData } from "@/hooks/useNftData";
+import { Skeleton } from "@/components/ui/skeleton";
 
-async function getERCType() {
-  const [isErc721, isErc1155] = await Promise.all([
-    isERC721({ contract }).catch(() => false),
-    isERC1155({ contract }).catch(() => false),
-  ]);
+export default function Home() {
+  const { data, loading, error, refetch } = useNftData();
 
-  return isErc1155 ? "ERC1155" : isErc721 ? "ERC721" : "ERC20";
-}
-
-export default async function Home() {
-  try {
-    const ercType = await getERCType();
-    if (!ercType) throw new Error("Failed to determine ERC type.");
-
-    // fetch contract information depending on the ERC type
-    let info;
-    switch (ercType) {
-      case "ERC20":
-        info = await getERC20Info(contract);
-        break;
-      case "ERC721":
-        info = await getERC721Info(contract);
-        break;
-      case "ERC1155":
-        info = await getERC1155Info(contract);
-        break;
-      default:
-        throw new Error("Unknown ERC type.");
-    }
-
-    if (!info) throw new Error("Failed to fetch NFT details.");
-
+  if (loading) {
     return (
-      <NftMint
-        contract={contract}
-        displayName={info.displayName || ""}
-        contractImage={info.contractImage || ""}
-        description={info.description || ""}
-        currencySymbol={info.currencySymbol || ""}
-        pricePerToken={info.pricePerToken || 0}
-        isERC1155={ercType === "ERC1155"}
-        isERC721={ercType === "ERC721"}
-        tokenId={defaultTokenId}
-      />
-    );
-  } catch (error) {
-    console.error("Error in Home component:", error);
-    return (
-      <div>
-        <h1>Failed to load NFT</h1>
-        <p>
-          {error instanceof Error
-            ? error.message
-            : "An unexpected error occurred."}
-        </p>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
+        <div className="w-full max-w-md">
+          <div className="aspect-square overflow-hidden rounded-lg mb-4">
+            <Skeleton className="w-full h-full" />
+          </div>
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-3/4" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-2/3" />
+          </div>
+        </div>
       </div>
     );
   }
+
+  if (error || !data) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4 text-red-600">Failed to load NFT</h1>
+          <p className="text-gray-600 dark:text-gray-300 mb-4">
+            {error || "An unexpected error occurred."}
+          </p>
+          <button
+            onClick={refetch}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <NftMint
+      contract={contract}
+      displayName={data.displayName}
+      contractImage={data.contractImage}
+      description={data.description}
+      currencySymbol={data.currencySymbol}
+      pricePerToken={data.pricePerToken}
+      isERC1155={data.isERC1155}
+      isERC721={data.isERC721}
+      tokenId={defaultTokenId}
+    />
+  );
 }
